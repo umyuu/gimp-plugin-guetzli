@@ -9,3 +9,6 @@ gimp-plugins Guetzli executable file call wrapper.
    plug-ins Directory copy to GIMP plug-ins Directory.
 
 2. Guetzli executable file copy to GIMP plug-ins Directory.
+
+
+[FYI:setup.txt](docs/setup.txt)
