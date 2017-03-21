@@ -5,10 +5,10 @@ gimp-plugins Guetzli executable file call wrapper.
 
 ## Install
 1. [download a ZIP](https://github.com/umyuu/gimp-plugins/archive/master.zip) file.
+2. setup
 
-   plug-ins Directory copy to GIMP plug-ins Directory.
-
-2. Guetzli executable file copy to GIMP plug-ins Directory.
+  - [ ] zip extract plug-ins Directory copy to GIMP plug-ins Directory.
+  - [ ] Guetzli executable file copy to GIMP plug-ins Directory.
 
 
 [FYI:setup.txt](docs/setup.txt)
