@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 # License: MIT License
-import os
-import time
-from collections import OrderedDict
-import subprocess
-import json
+
 import glob
-import sys
+import json
 import locale
+import os
+import subprocess
+from collections import OrderedDict
 
 try:
     from gimpfu import *
@@ -101,13 +100,12 @@ class Plugin(object):
 
     def run(self):
         cmd = self.get_args()
-        if isGIMP:
-            cmd = u' '.join(cmd)
-            # fix: python 2.7 unicode file bug
-            # http://stackoverflow.com/questions/9941064/subprocess-popen-with-a-unicode-path
-            cmd = cmd.encode(locale.getpreferredencoding())
-        else:
+        if not isGIMP:
             print(' '.join(cmd))
+        cmd = u' '.join(cmd)
+        # fix: python 2.7 unicode file bug
+        # http://stackoverflow.com/questions/9941064/subprocess-popen-with-a-unicode-path
+        cmd = cmd.encode(locale.getpreferredencoding())
         try:
             subprocess.call(cmd, shell=self.is_new_shell)
         except Exception as ex:
