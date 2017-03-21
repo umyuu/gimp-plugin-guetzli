@@ -1,0 +1,9 @@
+﻿------------------------------------------------------------
+□Directory
+------------------------------------------------------------
+./
+└ .gimp-2.8
+    └ plug-ins
+       ├ guetzli_export_plugin.json  …setting
+       ├ guetzli_export_plugin.py    …gimp-plugin
+       └ guetzli_windows_x86-64.exe  …guetzli executable file

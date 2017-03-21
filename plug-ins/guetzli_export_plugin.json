@@ -1,0 +1,13 @@
+{
+	"COMMENT": "⚡",
+	"COMMAND": {
+		"FILE": {
+			"PREFIX": "guetzli*",
+			"LOWER_LIMIT": 500000
+		},
+		"SUFFIX": [".png", ".jpg", ".jpeg"],
+		"PARAMS": {
+			"-verbose": "True"
+		}
+	}
+}
