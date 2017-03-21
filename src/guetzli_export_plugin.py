@@ -19,18 +19,23 @@ except ImportError:
 class ProgressBar(object):
     def __init__(self):
         self.value = 0
-        self.step = 0.1
+        self.step = 0.04
         self.minimum = 0
         self.maximum = 1
         if isGIMP:
             gimp.progress_init("Save guetzli ...")
 
     def perform_step(self):
+        """
+            value increment
+        :return: None
+        """
         self.value += self.step
         if isGIMP:
             gimp.progress_update(self.value)
         if self.value >= self.maximum:
             self.value = self.minimum
+
 class Plugin(object):
     JSON = None
 
@@ -111,19 +116,27 @@ class Plugin(object):
         cmd = cmd.encode(locale.getpreferredencoding())
         try:
             progress = ProgressBar()
-            t = threading.Thread(target=Plugin.run_thread, args=(cmd, self.is_new_shell))
+            lock = threading.RLock()
+            in_params = [cmd, self.is_new_shell]
+            out_params = []
+            t = threading.Thread(target=Plugin.run_thread, args=(cmd, self.is_new_shell, lock, out_params))
             t.start()
             while t.is_alive():
                 t.join(timeout=1)
                 progress.perform_step()
+            with lock:
+                print(out_params)
         except Exception as ex:
             raise
     @staticmethod
-    def run_thread(cmd, is_new_shell):
+    def run_thread(cmd, is_new_shell, lock, out_params):
         try:
             subprocess.call(cmd, shell=is_new_shell)
-        except Exception:
-            pass
+            with lock:
+                out_params.append(0)
+        except Exception as ex:
+            with lock:
+                out_params.append(ex)
     def set_filename(self):
         """
 
