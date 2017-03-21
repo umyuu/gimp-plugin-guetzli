@@ -7,6 +7,8 @@ import locale
 import os
 import subprocess
 from collections import OrderedDict
+import threading
+import time
 
 try:
     from gimpfu import *
@@ -18,7 +20,9 @@ except ImportError:
 class ProgressBar(object):
     def __init__(self):
         self.value = 0
-        self.step = 1
+        self.step = 0.1
+        self.minimum = 0
+        self.maximum = 1
         if isGIMP:
             gimp.progress_init("Save guetzli ...")
 
@@ -26,8 +30,8 @@ class ProgressBar(object):
         self.value += self.step
         if isGIMP:
             gimp.progress_update(self.value)
-
-
+        if self.value >= self.maximum:
+            self.value = self.minimum
 class Plugin(object):
     JSON = None
 
@@ -107,10 +111,20 @@ class Plugin(object):
         # http://stackoverflow.com/questions/9941064/subprocess-popen-with-a-unicode-path
         cmd = cmd.encode(locale.getpreferredencoding())
         try:
-            subprocess.call(cmd, shell=self.is_new_shell)
+            progress = ProgressBar()
+            t = threading.Thread(target=Plugin.run_thread, args=(cmd, self.is_new_shell))
+            t.start()
+            while t.is_alive():
+                time.sleep(1)
+                progress.perform_step()
         except Exception as ex:
             raise
-
+    @staticmethod
+    def run_thread(cmd, is_new_shell):
+        try:
+            subprocess.call(cmd, shell=is_new_shell)
+        except Exception:
+            pass
     def set_filename(self):
         """
 
