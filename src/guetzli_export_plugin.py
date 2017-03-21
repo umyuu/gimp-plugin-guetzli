@@ -140,7 +140,7 @@ class Plugin(object):
         return_code = 0
         exception = None
         try:
-            subprocess.call(in_params[1], shell=in_params[0])
+            return_code = subprocess.call(in_params[0], shell=in_params[1])
         except Exception as ex:
             return_code = 1
             exception = ex
