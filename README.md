@@ -19,4 +19,5 @@ gimp-plugins Guetzli executable file call wrapper.
 2. Open jpg/png Image File
 
 3. File Menu -> Export -> Save guetzli
+
    ![Save guetzli](docs//dialog.png)
