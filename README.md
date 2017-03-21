@@ -25,3 +25,6 @@ gimp-plugins Guetzli executable file call wrapper.
    Save .jpeg file
 
 4. Open .jpeg file
+
+## Uninstall
+Delete the file copied to GIMP plug-ins Directory.
