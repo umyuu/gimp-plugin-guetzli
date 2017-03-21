@@ -118,25 +118,37 @@ class Plugin(object):
             progress = ProgressBar()
             lock = threading.RLock()
             in_params = [cmd, self.is_new_shell]
-            out_params = []
-            t = threading.Thread(target=Plugin.run_thread, args=(cmd, self.is_new_shell, lock, out_params))
+            out_params = [None, '']
+            t = threading.Thread(target=Plugin.run_thread, args=(in_params, lock, out_params))
             t.start()
             while t.is_alive():
                 t.join(timeout=1)
                 progress.perform_step()
             with lock:
-                print(out_params)
+                if out_params[0] != 0:
+                    raise Exception(out_params[1])
         except Exception as ex:
             raise
     @staticmethod
-    def run_thread(cmd, is_new_shell, lock, out_params):
+    def run_thread(in_params, lock, out_params):
+        """
+        :param in_params: cmd | is_new_shell
+        :param lock:
+        :param out_params: return code | message
+        :return:None
+        """
+        return_code = 0
+        exception = None
         try:
-            subprocess.call(cmd, shell=is_new_shell)
-            with lock:
-                out_params.append(0)
+            subprocess.call(in_params[1], shell=in_params[0])
         except Exception as ex:
-            with lock:
-                out_params.append(ex)
+            return_code = 1
+            exception = ex
+        with lock:
+            out_params[0] = return_code
+            if exception is not None:
+                out_params[1] = exception
+
     def set_filename(self):
         """
 
