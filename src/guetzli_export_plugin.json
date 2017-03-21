@@ -1,6 +1,7 @@
 {
 	"COMMENT": "⚡",
 	"COMMAND": {
+		"NEW_SHELL" : "True",
 		"FILE": {
 			"PREFIX": "guetzli*",
 			"LOWER_LIMIT": 500000

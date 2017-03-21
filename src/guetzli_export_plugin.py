@@ -7,6 +7,7 @@ import subprocess
 import json
 import glob
 import sys
+import locale
 
 try:
     from gimpfu import *
@@ -38,7 +39,10 @@ class Plugin(object):
         self.cmd = self.search_command(node['FILE']['PREFIX'], node['FILE']['LOWER_LIMIT'])
         self.params = OrderedDict()
         self.is_verbose = node['PARAMS']['-verbose'].upper() == 'TRUE'
-
+        self.is_new_shell = node['NEW_SHELL'].upper() == 'TRUE'
+        self.output_extension = '.jpeg'
+        self.input_file = None
+        self.output_file = None
     def search_command(self, target, lower_limit):
         """ search guetzli
         :param target:
@@ -62,20 +66,22 @@ class Plugin(object):
             # .py => .json
             file_name = Plugin.with_suffix(__file__, '.json')
             try:
-                with open(file_name, 'r') as file:
-                    Plugin.JSON = json.load(file)
+                with open(file_name, 'r') as infile:
+                    Plugin.JSON = json.load(infile)
             except:
                 raise Exception('File Not Found\n{0}'.format(file_name))
         return Plugin.JSON
 
     @staticmethod
-    def with_suffix(file, suffix):
-        return os.path.splitext(file)[0] + suffix
+    def with_suffix(file_name, suffix):
+        return os.path.splitext(file_name)[0] + suffix
 
     def set_quality(self, quality):
         self.params['-quality'] = int(quality)
         return self
-
+    def set_extension(self, extension):
+        self.output_extension = extension
+        return self
     def get_args(self):
         """
             guetzli | params | in | out
@@ -88,26 +94,28 @@ class Plugin(object):
             args.append(str(self.params[k]))
         if self.is_verbose:
             args.append('-verbose')
-        input_file = Plugin.get_input_filename()
-        output_file = Plugin.with_suffix(input_file, '.jpeg')
-        args.append(input_file)
-        args.append(output_file)
+        self.set_filename()
+        args.append(self.input_file)
+        args.append(self.output_file)
         return args
 
     def run(self):
         cmd = self.get_args()
-        if not isGIMP:
+        if isGIMP:
+            cmd = u' '.join(cmd)
+            # fix: python 2.7 unicode file bug
+            # http://stackoverflow.com/questions/9941064/subprocess-popen-with-a-unicode-path
+            cmd = cmd.encode(locale.getpreferredencoding())
+        else:
             print(' '.join(cmd))
         try:
-            subprocess.call(cmd)
+            subprocess.call(cmd, shell=self.is_new_shell)
         except Exception as ex:
             raise
 
-    @staticmethod
-    def get_input_filename():
+    def set_filename(self):
         """
 
-        :return: unicode filename
         """
         name = ''
         if isGIMP:
@@ -120,21 +128,24 @@ class Plugin(object):
         if not name.endswith(supported):
             raise Exception('UnSupported File Type\n{0}'.format(name))
         if isGIMP:
-            name = r'{0}'.format(name)
+            name = '{0}'.format(name)
         else:
             name = '{0}'.format(name)
-        return name
+        self.input_file = '"{0}"'.format(name)
+        self.output_file = '"{0}"'.format(Plugin.with_suffix(name, self.output_extension))
 
     @staticmethod
-    def main(quality):
+    def main(ext, quality):
         plugin = Plugin()
+        plugin.set_extension(ext)
         plugin.set_quality(quality)
         plugin.run()
+
 
 if isGIMP:
     register(
         proc_name="python_fu_guetzli_export",
-        blurb="",
+        blurb="Please click the OK button\n after saving the image",
         help="",
         author="umyu",
         copyright="umyu",
@@ -142,7 +153,8 @@ if isGIMP:
         label="Save guetzli ...",
         imagetypes="*",
         params=[
-            (PF_SLIDER, "quality", "quality", 95, (85, 100, 1))
+            (PF_STRING, "extension", "File extension", '.jpeg'),
+            (PF_SLIDER, "quality", "quality", 95, (85, 100, 1)),
         ],
         results=[],
         function=Plugin.main,
@@ -150,4 +162,4 @@ if isGIMP:
     )
     main()
 else:
-    Plugin.main(95)
+    Plugin.main('.jpeg', 95)
