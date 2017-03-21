@@ -91,7 +91,7 @@ class Plugin(object):
         return self
     def get_args(self):
         """
-            guetzli | params | in | out
+            guetzli , params , in , out
         :return:
         """
         args = [self.cmd]
@@ -132,9 +132,9 @@ class Plugin(object):
     @staticmethod
     def run_thread(in_params, lock, out_params):
         """
-        :param in_params: cmd | is_new_shell
+        :param in_params: cmd , is_new_shell
         :param lock:
-        :param out_params: return code | message
+        :param out_params: return code , message
         :return:None
         """
         return_code = 0
@@ -151,7 +151,7 @@ class Plugin(object):
 
     def set_filename(self):
         """
-
+            set input, output file
         """
         name = ''
         if isGIMP:
