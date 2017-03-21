@@ -8,7 +8,6 @@ import os
 import subprocess
 from collections import OrderedDict
 import threading
-import time
 
 try:
     from gimpfu import *
@@ -115,7 +114,7 @@ class Plugin(object):
             t = threading.Thread(target=Plugin.run_thread, args=(cmd, self.is_new_shell))
             t.start()
             while t.is_alive():
-                time.sleep(1)
+                t.join(timeout=1)
                 progress.perform_step()
         except Exception as ex:
             raise
