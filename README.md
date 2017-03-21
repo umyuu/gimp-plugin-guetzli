@@ -12,3 +12,11 @@ gimp-plugins Guetzli executable file call wrapper.
 
 
 [FYI:setup.txt](docs/setup.txt)
+
+## Plugin Run.
+1. Run GIMP
+
+2. Open jpg/png Image File
+
+3. File Menu -> Export -> Save guetzli
+   ![Save guetzli](docs//dialog.png)
