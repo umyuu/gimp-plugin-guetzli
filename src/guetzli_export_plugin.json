@@ -1,8 +1,11 @@
 {
 	"COMMENT": "⚡",
 	"COMMAND": {
-		"NEW_SHELL" : "True",
+		"NEW_SHELL": "True",
 		"FILE": {
+			"DOWNLOAD": {
+				"LINK": "https://github.com/google/guetzli/releases"
+			},
 			"PREFIX": "guetzli*",
 			"LOWER_LIMIT": 500000
 		},

@@ -18,10 +18,15 @@ except ImportError:
 
 class ProgressBar(object):
     def __init__(self):
+        """
+            self.step calcation
+        """
         self.value = 0
+        # todo best increment step
         self.step = 0.04
         self.minimum = 0
         self.maximum = 1
+        # todo model&view split
         if isGIMP:
             gimp.progress_init("Save guetzli ...")
 
@@ -36,6 +41,14 @@ class ProgressBar(object):
         if self.value >= self.maximum:
             self.value = self.minimum
 
+class Canvas(object):
+    """
+
+    """
+    def __init__(self):
+        pass
+    def file_name(self):
+        pass
 class Plugin(object):
     JSON = None
 
@@ -43,25 +56,33 @@ class Plugin(object):
         self.base_dir = os.path.dirname(__file__)
         Plugin.load_setting()
         node = Plugin.JSON['COMMAND']
-        self.cmd = self.search_command(node['FILE']['PREFIX'], node['FILE']['LOWER_LIMIT'])
+        self.cmd = self.search_command(node['FILE'])
         self.params = OrderedDict()
         self.is_verbose = node['PARAMS']['-verbose'].upper() == 'TRUE'
         self.is_new_shell = node['NEW_SHELL'].upper() == 'TRUE'
         self.output_extension = '.jpeg'
         self.input_file = None
         self.output_file = None
-    def search_command(self, target, lower_limit):
+    def search_command(self, node):
         """ search guetzli
-        :param target:
-        :param lower_limit:
+        :param node:
         :return:file name
                 order by find first
         """
-        for file in glob.glob(os.path.join(self.base_dir, target)):
+        target = node['PREFIX']
+        lower_limit = int(node['LOWER_LIMIT'])
+        link = node['DOWNLOAD']['LINK']
+        #if isGIMP:
+        #    gimp.message("INFO:" + link)
+            #raise Exception('File Not Found\n{0}\nPlease download {1}\n{2}'.format(self.base_dir, target[:-1], link))
+        for exe_file in glob.glob(os.path.join(self.base_dir, target)):
             # skip plugin file
-            if os.path.getsize(file) >= int(lower_limit):
-                return file
-        raise Exception('File Not Found\n{0}\n{1}'.format(self.base_dir, target[:-1]))
+            if os.path.getsize(exe_file) >= lower_limit:
+                return exe_file
+        if isGIMP:
+            pass
+        else:
+            raise Exception('File Not Found\n{0}\nPlease download {1}\n{2}'.format(self.base_dir, target[:-1], link))
 
     @staticmethod
     def load_setting():
@@ -76,6 +97,7 @@ class Plugin(object):
                 with open(file_name, 'r') as infile:
                     Plugin.JSON = json.load(infile)
             except:
+                # file open error Wrapping
                 raise Exception('File Not Found\n{0}'.format(file_name))
         return Plugin.JSON
 
@@ -125,6 +147,7 @@ class Plugin(object):
                 t.join(timeout=1)
                 progress.perform_step()
             with lock:
+                # not Success
                 if out_params[0] != 0:
                     raise Exception(out_params[1])
         except Exception as ex:
@@ -137,7 +160,6 @@ class Plugin(object):
         :param out_params: return code , message
         :return:None
         """
-        return_code = 0
         exception = None
         try:
             return_code = subprocess.call(in_params[0], shell=in_params[1])
@@ -172,6 +194,12 @@ class Plugin(object):
 
     @staticmethod
     def main(ext, quality):
+        """
+        plugin entry point
+        :param ext: output file extension
+        :param quality:
+        :return:
+        """
         plugin = Plugin()
         plugin.set_extension(ext)
         plugin.set_quality(quality)
