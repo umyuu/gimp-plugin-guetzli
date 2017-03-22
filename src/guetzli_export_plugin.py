@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # License: MIT License
-
+# Plugin EntryPoint: Plugin.main
 import glob
 import json
 import locale
@@ -20,7 +20,8 @@ except ImportError:
 class ProgressBar(object):
     def __init__(self, step=0.01):
         """
-            self.step calcation
+            Cyclic ProgressBar
+            GIMP GUI Update
         """
         self.value = Decimal(0)
         self._step = Decimal(step)
@@ -79,6 +80,7 @@ class Canvas(object):
     @property
     def size(self):
         return self.width * self.height
+
 class Plugin(object):
     JSON = None
 
@@ -154,12 +156,11 @@ class Plugin(object):
           <blockquote cite="https://github.com/google/guetzli">
           Guetzli uses a significant amount of CPU time. You should count on using about 1 minute of CPU per 1 MPix of input image.
           </blockquote>
-        :return:
+        :return: Per second
         """
         minute = Decimal(self.canvas.size) / Decimal(1000000)
         # Thread#join timeout elapsed
-        step = minute / Decimal(60)
-        return step
+        return minute / Decimal(60)
     def run(self):
         cmd = self.get_args()
         if not isGIMP:
@@ -220,7 +221,7 @@ class Plugin(object):
         """
         plugin entry point
         :param ext: output file extension
-        :param quality:
+        :param quality:output file quality
         :return:
         """
         plugin = Plugin()
