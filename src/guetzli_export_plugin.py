@@ -110,10 +110,7 @@ class Plugin(object):
             # skip plugin file
             if os.path.getsize(exe_file) >= lower_limit:
                 return exe_file
-        if isGIMP:
-            pass
-        else:
-            raise Exception('File Not Found\n{0}\nPlease download {1}\n{2}'.format(self.base_dir, target[:-1], link))
+        raise Exception('File Not Found\n{0}\nPlease download {1}\n{2}'.format(self.base_dir, target[:-1], link))
 
     @staticmethod
     def load_setting():
@@ -159,10 +156,10 @@ class Plugin(object):
         return args
     def calc_best_step(self):
         """
+          ProgressBar step calc
           <blockquote cite="https://github.com/google/guetzli">
           Guetzli uses a significant amount of CPU time. You should count on using about 1 minute of CPU per 1 MPix of input image.
           </blockquote>
-        :param canvas:
         :return:
         """
         minute = Decimal(self.canvas.size) / Decimal(1000000)
@@ -221,10 +218,6 @@ class Plugin(object):
         supported = tuple(Plugin.JSON['COMMAND']['SUFFIX'])
         if not name.endswith(supported):
             raise Exception('UnSupported File Type\n{0}'.format(name))
-        if isGIMP:
-            name = '{0}'.format(name)
-        else:
-            name = '{0}'.format(name)
         self.input_file = '"{0}"'.format(name)
         self.output_file = '"{0}"'.format(Plugin.with_suffix(name, self.output_extension))
 
