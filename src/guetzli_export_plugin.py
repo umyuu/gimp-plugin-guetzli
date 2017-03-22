@@ -87,8 +87,7 @@ class Plugin(object):
         Plugin.load_setting()
         node = Plugin.JSON['COMMAND']
         self.cmd = self.search_command(node['FILE'])
-        self.params = OrderedDict()
-        self.is_verbose = node['PARAMS']['--verbose'].upper() == 'TRUE'
+        self.params = OrderedDict(node['PARAMS'])
         self.is_new_shell = node['NEW_SHELL'].upper() == 'TRUE'
         self.output_extension = '.jpeg'
         self.canvas = Canvas()
@@ -103,9 +102,6 @@ class Plugin(object):
         target = node['PREFIX']
         lower_limit = int(node['LOWER_LIMIT'])
         link = node['DOWNLOAD']['LINK']
-        #if isGIMP:
-        #    gimp.message("INFO:" + link)
-            #raise Exception('File Not Found\n{0}\nPlease download {1}\n{2}'.format(self.base_dir, target[:-1], link))
         for exe_file in glob.glob(os.path.join(self.base_dir, target)):
             # skip plugin file
             if os.path.getsize(exe_file) > lower_limit:
@@ -148,8 +144,6 @@ class Plugin(object):
         for k in self.params.keys():
             args.append(k)
             args.append(str(self.params[k]))
-        if self.is_verbose:
-            args.append('--verbose')
         self.set_filename()
         args.append(self.input_file)
         args.append(self.output_file)
@@ -242,7 +236,7 @@ if isGIMP:
         help="",
         author="umyu",
         copyright="umyu",
-        date="2017/3/20",
+        date="2017/3/22",
         label="Save guetzli ...",
         imagetypes="*",
         params=[
