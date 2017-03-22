@@ -57,7 +57,9 @@ class ProgressBar(object):
 
 class Canvas(object):
     """
-        Image Wrapper Class
+        Canvas Class Adapter
+        Gimp Image Class / Script Debugging interface
+        @pattern Adapter
     """
     def __init__(self, image):
         self.image = image
@@ -225,14 +227,17 @@ class Plugin(object):
         self.output_file = '"{0}"'.format(Plugin.with_suffix(name, self.output_extension))
 
     @staticmethod
-    def main(img, drawable, ext, quality):
+    def main(image, drawable, ext, quality):
         """
         plugin entry point
+
+        :param image:Selected Image      GIMP menu<Image> required
+        :param drawable:drawable Image   GIMP menu<Image> required
         :param ext: output file extension
         :param quality:output file quality
         :return:
         """
-        plugin = Plugin(Canvas(img))
+        plugin = Plugin(Canvas(image))
         plugin.set_extension(ext)
         plugin.set_quality(quality)
         plugin.run()
@@ -246,17 +251,17 @@ if isGIMP:
         author="umyu",
         copyright="umyu",
         date="2017/3/22",
-        # GIMP Selected Image
-        label="<Image>/File/Export/Save guetzli ...",
-        #label="Save guetzli ...",
+        label="Save guetzli ...",
         imagetypes="*",
         params=[
+            (PF_IMAGE, "image", "Input image", None),
+            (PF_DRAWABLE, "drawable", "Input drawable", None),
             (PF_STRING, "extension", "File extension", '.jpeg'),
             (PF_SLIDER, "quality", "quality", 95, (85, 100, 1)),
         ],
         results=[],
         function=Plugin.main,
-        #menu="<Image>/File/Export/",
+        menu="<Image>/File/Export/",
         domain=("gimp20-python", gimp.locale_directory)
     )
     main()
