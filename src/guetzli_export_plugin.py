@@ -23,7 +23,7 @@ class ProgressBar(object):
             self.step calcation
         """
         self.value = Decimal(0)
-        self._step = step
+        self._step = Decimal(step)
         # <blockquote cite="https://developer.gimp.org/api/2.0/libgimp/libgimp-gimpprogress.html">
         # gimp_progress_update
         # percentage :Percentage of progress completed (in the range from 0.0 to 1.0).
