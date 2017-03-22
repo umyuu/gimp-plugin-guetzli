@@ -62,7 +62,11 @@ class Canvas(object):
         @pattern Adapter
     """
     def __init__(self, image):
+        """
+        :param image: is None Script Debugging
+        """
         self.image = image
+
     @property
     def filename(self):
         if self.image is not None:
@@ -177,22 +181,19 @@ class Plugin(object):
         # fix: python 2.7 unicode file bug
         # http://stackoverflow.com/questions/9941064/subprocess-popen-with-a-unicode-path
         cmd = cmd.encode(locale.getpreferredencoding())
-        try:
-            progress = ProgressBar(self.calc_best_step())
-            lock = threading.RLock()
-            in_params = [cmd, self.is_new_shell]
-            out_params = [None, '']
-            t = threading.Thread(target=Plugin.run_thread, args=(in_params, lock, out_params))
-            t.start()
-            while t.is_alive():
-                t.join(timeout=1)
-                progress.perform_step()
-            with lock:
-                # not Success
-                if out_params[0] != 0:
-                    raise Exception(out_params[1])
-        except Exception as ex:
-            raise
+        progress = ProgressBar(self.calc_best_step())
+        in_params = [cmd, self.is_new_shell]
+        out_params = [None, '']
+        lock = threading.RLock()
+        t = threading.Thread(target=Plugin.run_thread, args=(in_params, lock, out_params))
+        t.start()
+        while t.is_alive():
+            t.join(timeout=1)
+            progress.perform_step()
+        with lock:
+            # not Success
+            if out_params[0] != 0:
+                raise Exception(out_params[1])
     @staticmethod
     def run_thread(in_params, lock, out_params):
         """
@@ -230,17 +231,21 @@ class Plugin(object):
     def main(image, drawable, ext, quality):
         """
         plugin entry point
-
         :param image:Selected Image      GIMP menu<Image> required
         :param drawable:drawable Image   GIMP menu<Image> required
         :param ext: output file extension
         :param quality:output file quality
         :return:
         """
-        plugin = Plugin(Canvas(image))
-        plugin.set_extension(ext)
-        plugin.set_quality(quality)
-        plugin.run()
+        try:
+            plugin = Plugin(Canvas(image))
+            plugin.set_extension(ext)
+            plugin.set_quality(quality)
+            plugin.run()
+        except Exception as ex:
+            raise
+            #if isGIMP:
+            #    gimp.message(ex.message)
 
 
 if isGIMP:
@@ -266,4 +271,5 @@ if isGIMP:
     )
     main()
 else:
-    Plugin.main(None, None, '.jpeg', 95)
+    if __name__ == '__main__':
+        Plugin.main(None, None, '.jpeg', 95)
