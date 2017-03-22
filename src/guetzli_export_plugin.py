@@ -80,7 +80,14 @@ class Canvas(object):
     @property
     def size(self):
         return self.width * self.height
-
+    @property
+    def dirty(self):
+        """
+        :return: Unsaved:True, Saved:False
+        """
+        if self.image is not None:
+            return self.image.dirty
+        return False
 class Plugin(object):
     JSON = None
 
@@ -213,6 +220,8 @@ class Plugin(object):
         supported = tuple(Plugin.JSON['COMMAND']['SUFFIX'])
         if not name.endswith(supported):
             raise Exception('UnSupported File Type\n{0}'.format(name))
+        if self.canvas.dirty:
+            raise Exception('Please save the image\n{0}'.format(name))
         self.input_file = '"{0}"'.format(name)
         self.output_file = '"{0}"'.format(Plugin.with_suffix(name, self.output_extension))
 
