@@ -150,8 +150,8 @@ class Plugin(object):
         return self
     def get_args(self):
         """
-            guetzli , params , in , out
-        :return:
+            command line arguments
+        :return: guetzli , params , in , out
         """
         args = [self.cmd]
         # add command line parameter
@@ -174,6 +174,11 @@ class Plugin(object):
         # Thread#join timeout elapsed
         return minute / Decimal(60)
     def run(self):
+        """
+        Thread#start & join
+        GIMP GUI Update
+        :return: None
+        """
         cmd = self.get_args()
         if not isGIMP:
             print(' '.join(cmd))
