@@ -76,6 +76,9 @@ class Canvas(object):
         if self.image is not None:
             return self.image.height
         return 617
+    @property
+    def size(self):
+        return self.width * self.height
 class Plugin(object):
     JSON = None
 
@@ -88,6 +91,7 @@ class Plugin(object):
         self.is_verbose = node['PARAMS']['-verbose'].upper() == 'TRUE'
         self.is_new_shell = node['NEW_SHELL'].upper() == 'TRUE'
         self.output_extension = '.jpeg'
+        self.canvas = Canvas()
         self.input_file = None
         self.output_file = None
     def search_command(self, node):
@@ -131,7 +135,6 @@ class Plugin(object):
     @staticmethod
     def with_suffix(file_name, suffix):
         return os.path.splitext(file_name)[0] + suffix
-
     def set_quality(self, quality):
         self.params['-quality'] = int(quality)
         return self
@@ -154,7 +157,7 @@ class Plugin(object):
         args.append(self.input_file)
         args.append(self.output_file)
         return args
-    def calc_best_step(self, canvas):
+    def calc_best_step(self):
         """
           <blockquote cite="https://github.com/google/guetzli">
           Guetzli uses a significant amount of CPU time. You should count on using about 1 minute of CPU per 1 MPix of input image.
@@ -162,7 +165,8 @@ class Plugin(object):
         :param canvas:
         :return:
         """
-        minute = Decimal(canvas.width * canvas.height)  / Decimal(1000000)
+        minute = Decimal(self.canvas.size) / Decimal(1000000)
+        # Thread#join timeout elapsed
         step = minute / Decimal(60)
         return step
     def run(self):
@@ -174,9 +178,7 @@ class Plugin(object):
         # http://stackoverflow.com/questions/9941064/subprocess-popen-with-a-unicode-path
         cmd = cmd.encode(locale.getpreferredencoding())
         try:
-            canvas = Canvas()
-            progress = ProgressBar(self.calc_best_step(canvas))
-            print(progress.step)
+            progress = ProgressBar(self.calc_best_step())
             lock = threading.RLock()
             in_params = [cmd, self.is_new_shell]
             out_params = [None, '']
