@@ -8,6 +8,7 @@ import os
 import subprocess
 from collections import OrderedDict
 import threading
+from decimal import Decimal
 
 try:
     from gimpfu import *
@@ -17,19 +18,27 @@ except ImportError:
 
 
 class ProgressBar(object):
-    def __init__(self):
+    def __init__(self, step=0.01):
         """
             self.step calcation
         """
         self.value = 0
-        # todo best increment step
-        self.step = 0.04
+        self._step = step
+        # <blockquote cite="https://developer.gimp.org/api/2.0/libgimp/libgimp-gimpprogress.html">
+        # gimp_progress_update
+        # percentage :Percentage of progress completed (in the range from 0.0 to 1.0).
+        # </blockquote>
         self.minimum = 0
         self.maximum = 1
         # todo model&view split
         if isGIMP:
             gimp.progress_init("Save guetzli ...")
-
+    @property
+    def step(self):
+        return self._step
+    @step.setter
+    def step(self, value):
+        self._step = value
     def perform_step(self):
         """
             value increment
@@ -38,17 +47,35 @@ class ProgressBar(object):
         self.value += self.step
         if isGIMP:
             gimp.progress_update(self.value)
+        else:
+            print(self.value)
         if self.value >= self.maximum:
             self.value = self.minimum
 
 class Canvas(object):
     """
-
+        Image Wrapper Class
     """
     def __init__(self):
-        pass
-    def file_name(self):
-        pass
+        if isGIMP:
+            self.image = gimp.image_list()[0]
+        else:
+            self.image = None
+    @property
+    def filename(self):
+        if self.image is not None:
+            return self.image.filename
+        return '.\\test.png'
+    @property
+    def width(self):
+        if self.image is not None:
+            return self.image.width
+        return 800
+    @property
+    def height(self):
+        if self.image is not None:
+            return self.image.height
+        return 617
 class Plugin(object):
     JSON = None
 
@@ -127,7 +154,17 @@ class Plugin(object):
         args.append(self.input_file)
         args.append(self.output_file)
         return args
-
+    def calc_best_step(self, canvas):
+        """
+          <blockquote cite="https://github.com/google/guetzli">
+          Guetzli uses a significant amount of CPU time. You should count on using about 1 minute of CPU per 1 MPix of input image.
+          </blockquote>
+        :param canvas:
+        :return:
+        """
+        minute = Decimal(canvas.width * canvas.height)  / Decimal(1000000)
+        step = minute / Decimal(60)
+        return step
     def run(self):
         cmd = self.get_args()
         if not isGIMP:
@@ -137,7 +174,9 @@ class Plugin(object):
         # http://stackoverflow.com/questions/9941064/subprocess-popen-with-a-unicode-path
         cmd = cmd.encode(locale.getpreferredencoding())
         try:
-            progress = ProgressBar()
+            canvas = Canvas()
+            progress = ProgressBar(self.calc_best_step(canvas))
+            print(progress.step)
             lock = threading.RLock()
             in_params = [cmd, self.is_new_shell]
             out_params = [None, '']
