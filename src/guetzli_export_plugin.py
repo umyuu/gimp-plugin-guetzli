@@ -88,7 +88,7 @@ class Plugin(object):
         node = Plugin.JSON['COMMAND']
         self.cmd = self.search_command(node['FILE'])
         self.params = OrderedDict()
-        self.is_verbose = node['PARAMS']['-verbose'].upper() == 'TRUE'
+        self.is_verbose = node['PARAMS']['--verbose'].upper() == 'TRUE'
         self.is_new_shell = node['NEW_SHELL'].upper() == 'TRUE'
         self.output_extension = '.jpeg'
         self.canvas = Canvas()
@@ -108,7 +108,7 @@ class Plugin(object):
             #raise Exception('File Not Found\n{0}\nPlease download {1}\n{2}'.format(self.base_dir, target[:-1], link))
         for exe_file in glob.glob(os.path.join(self.base_dir, target)):
             # skip plugin file
-            if os.path.getsize(exe_file) >= lower_limit:
+            if os.path.getsize(exe_file) > lower_limit:
                 return exe_file
         raise Exception('File Not Found\n{0}\nPlease download {1}\n{2}'.format(self.base_dir, target[:-1], link))
 
@@ -133,7 +133,7 @@ class Plugin(object):
     def with_suffix(file_name, suffix):
         return os.path.splitext(file_name)[0] + suffix
     def set_quality(self, quality):
-        self.params['-quality'] = int(quality)
+        self.params['--quality'] = int(quality)
         return self
     def set_extension(self, extension):
         self.output_extension = extension
@@ -149,7 +149,7 @@ class Plugin(object):
             args.append(k)
             args.append(str(self.params[k]))
         if self.is_verbose:
-            args.append('-verbose')
+            args.append('--verbose')
         self.set_filename()
         args.append(self.input_file)
         args.append(self.output_file)

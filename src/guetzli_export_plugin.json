@@ -1,17 +1,17 @@
 {
 	"COMMENT": "⚡",
 	"COMMAND": {
-		"NEW_SHELL": "True",
+		"NEW_SHELL": "False",
 		"FILE": {
 			"DOWNLOAD": {
 				"LINK": "https://github.com/google/guetzli/releases"
 			},
 			"PREFIX": "guetzli*",
-			"LOWER_LIMIT": 500000
+			"LOWER_LIMIT": 232960
 		},
 		"SUFFIX": [".png", ".jpg", ".jpeg"],
 		"PARAMS": {
-			"-verbose": "True"
+			"--verbose": "True"
 		}
 	}
 }
