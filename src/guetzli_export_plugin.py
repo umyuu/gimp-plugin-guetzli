@@ -216,12 +216,7 @@ class Plugin(object):
         """
             set input, output file
         """
-        name = ''
-        if isGIMP:
-            image = gimp.image_list()[0]
-            name = image.filename
-        else:
-            name = '.\\test.png'
+        name = self.canvas.filename
         # suffix check
         supported = tuple(Plugin.JSON['COMMAND']['SUFFIX'])
         if not name.endswith(supported):
