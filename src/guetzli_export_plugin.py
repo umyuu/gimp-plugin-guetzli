@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # License: MIT License
 # Plugin EntryPoint: Plugin.main
+# Python 2.7.10
 import glob
 import json
 import locale
@@ -12,6 +13,7 @@ from decimal import Decimal
 
 try:
     from gimpfu import *
+    gettext.install("gimp20-python", gimp.locale_directory, unicode=True)
     isGIMP = True
 except ImportError:
     isGIMP = False
@@ -57,11 +59,8 @@ class Canvas(object):
     """
         Image Wrapper Class
     """
-    def __init__(self):
-        if isGIMP:
-            self.image = gimp.image_list()[0]
-        else:
-            self.image = None
+    def __init__(self, image):
+        self.image = image
     @property
     def filename(self):
         if self.image is not None:
@@ -91,7 +90,8 @@ class Canvas(object):
 class Plugin(object):
     JSON = None
 
-    def __init__(self):
+    def __init__(self, canvas):
+        self.canvas = canvas
         self.base_dir = os.path.dirname(__file__)
         Plugin.load_setting()
         node = Plugin.JSON['COMMAND']
@@ -99,7 +99,6 @@ class Plugin(object):
         self.params = OrderedDict(node['PARAMS'])
         self.is_new_shell = node['NEW_SHELL'].upper() == 'TRUE'
         self.output_extension = '.jpeg'
-        self.canvas = Canvas()
         self.input_file = None
         self.output_file = None
     def search_command(self, node):
@@ -226,14 +225,14 @@ class Plugin(object):
         self.output_file = '"{0}"'.format(Plugin.with_suffix(name, self.output_extension))
 
     @staticmethod
-    def main(ext, quality):
+    def main(img, drawable, ext, quality):
         """
         plugin entry point
         :param ext: output file extension
         :param quality:output file quality
         :return:
         """
-        plugin = Plugin()
+        plugin = Plugin(Canvas(img))
         plugin.set_extension(ext)
         plugin.set_quality(quality)
         plugin.run()
@@ -247,7 +246,9 @@ if isGIMP:
         author="umyu",
         copyright="umyu",
         date="2017/3/22",
-        label="Save guetzli ...",
+        # GIMP Selected Image
+        label="<Image>/File/Export/Save guetzli ...",
+        #label="Save guetzli ...",
         imagetypes="*",
         params=[
             (PF_STRING, "extension", "File extension", '.jpeg'),
@@ -255,8 +256,9 @@ if isGIMP:
         ],
         results=[],
         function=Plugin.main,
-        menu="<Image>/File/Export/"
+        #menu="<Image>/File/Export/",
+        domain=("gimp20-python", gimp.locale_directory)
     )
     main()
 else:
-    Plugin.main('.jpeg', 95)
+    Plugin.main(None, None, '.jpeg', 95)
