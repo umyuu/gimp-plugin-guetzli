@@ -33,9 +33,7 @@ class ProgressBar(object):
         # </blockquote>
         self.minimum = Decimal(0)
         self.maximum = Decimal(1)
-        # todo model&view split
-        if isGIMP:
-            gimp.progress_init("Save guetzli ...")
+
     @property
     def step(self):
         return self._step
@@ -98,6 +96,8 @@ class Plugin(object):
 
     def __init__(self, canvas):
         self.canvas = canvas
+        self.progress = ProgressBar()
+        self.progress.step = self.calc_best_step()
         self.base_dir = os.path.dirname(__file__)
         Plugin.load_setting()
         node = Plugin.JSON['COMMAND']
@@ -170,9 +170,10 @@ class Plugin(object):
           </blockquote>
         :return: Per second
         """
-        minute = Decimal(self.canvas.size) / Decimal(1000000)
-        # Thread#join timeout elapsed
-        return minute / Decimal(60)
+        # 1 minute => Thread#join timeout elapsed
+        seconds = Decimal(self.canvas.size) / Decimal(1000000) * Decimal(60)
+        # ProgressBar#maximum:1
+        return self.progress.maximum / seconds
     def run(self):
         """
         Thread#start & join
@@ -186,15 +187,16 @@ class Plugin(object):
         # fix: python 2.7 unicode file bug
         # http://stackoverflow.com/questions/9941064/subprocess-popen-with-a-unicode-path
         cmd = cmd.encode(locale.getpreferredencoding())
-        progress = ProgressBar(self.calc_best_step())
         in_params = [cmd, self.is_new_shell]
         out_params = [None, '']
+        if isGIMP:
+            gimp.progress_init("Save guetzli ...")
         lock = threading.RLock()
         t = threading.Thread(target=Plugin.run_thread, args=(in_params, lock, out_params))
         t.start()
         while t.is_alive():
             t.join(timeout=1)
-            progress.perform_step()
+            self.progress.perform_step()
         with lock:
             # not Success
             if out_params[0] != 0:
