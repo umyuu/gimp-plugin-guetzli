@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # License: MIT License
-
+# Plugin EntryPoint: Plugin.main
+# Python 2.7.10
 import glob
 import json
 import locale
@@ -12,6 +13,7 @@ from decimal import Decimal
 
 try:
     from gimpfu import *
+    gettext.install("gimp20-python", gimp.locale_directory, unicode=True)
     isGIMP = True
 except ImportError:
     isGIMP = False
@@ -20,7 +22,8 @@ except ImportError:
 class ProgressBar(object):
     def __init__(self, step=0.01):
         """
-            self.step calcation
+            Cyclic ProgressBar
+            GIMP GUI Update
         """
         self.value = Decimal(0)
         self._step = Decimal(step)
@@ -30,9 +33,6 @@ class ProgressBar(object):
         # </blockquote>
         self.minimum = Decimal(0)
         self.maximum = Decimal(1)
-        # todo model&view split
-        if isGIMP:
-            gimp.progress_init("Save guetzli ...")
     @property
     def step(self):
         return self._step
@@ -54,13 +54,15 @@ class ProgressBar(object):
 
 class Canvas(object):
     """
-        Image Wrapper Class
+        Canvas Class Adapter
+        Gimp Image Class / Script Debugging interface
+        @pattern Adapter
     """
-    def __init__(self):
-        if isGIMP:
-            self.image = gimp.image_list()[0]
-        else:
-            self.image = None
+    def __init__(self, image):
+        """
+        :param image: is None Script Debugging
+        """
+        self.image = image
     @property
     def filename(self):
         if self.image is not None:
@@ -79,10 +81,22 @@ class Canvas(object):
     @property
     def size(self):
         return self.width * self.height
+    @property
+    def dirty(self):
+        """
+        :return: Unsaved:True, Saved:False
+        """
+        if self.image is not None:
+            return self.image.dirty
+        return False
+
 class Plugin(object):
     JSON = None
 
-    def __init__(self):
+    def __init__(self, canvas):
+        self.canvas = canvas
+        self.progress = ProgressBar()
+        self.progress.step = self.calc_best_step()
         self.base_dir = os.path.dirname(__file__)
         Plugin.load_setting()
         node = Plugin.JSON['COMMAND']
@@ -90,7 +104,6 @@ class Plugin(object):
         self.params = OrderedDict(node['PARAMS'])
         self.is_new_shell = node['NEW_SHELL'].upper() == 'TRUE'
         self.output_extension = '.jpeg'
-        self.canvas = Canvas()
         self.input_file = None
         self.output_file = None
     def search_command(self, node):
@@ -121,8 +134,7 @@ class Plugin(object):
                 with open(file_name, 'r') as infile:
                     Plugin.JSON = json.load(infile)
             except:
-                # file open error Wrapping
-                raise Exception('File Not Found\n{0}'.format(file_name))
+                raise
         return Plugin.JSON
 
     @staticmethod
@@ -136,8 +148,8 @@ class Plugin(object):
         return self
     def get_args(self):
         """
-            guetzli , params , in , out
-        :return:
+            command line arguments
+        :return: guetzli , params , in , out
         """
         args = [self.cmd]
         # add command line parameter
@@ -154,13 +166,17 @@ class Plugin(object):
           <blockquote cite="https://github.com/google/guetzli">
           Guetzli uses a significant amount of CPU time. You should count on using about 1 minute of CPU per 1 MPix of input image.
           </blockquote>
-        :return:
+        :return: ProgressBar#maximum / Per second
         """
-        minute = Decimal(self.canvas.size) / Decimal(1000000)
-        # Thread#join timeout elapsed
-        step = minute / Decimal(60)
-        return step
+        # 1 minute => Thread#join timeout elapsed
+        seconds = Decimal(self.canvas.size) / Decimal(1000000) * Decimal(60)
+        return self.progress.maximum / seconds
     def run(self):
+        """
+        Thread#start & join
+        GIMP GUI Update
+        :return: None
+        """
         cmd = self.get_args()
         if not isGIMP:
             print(' '.join(cmd))
@@ -168,22 +184,20 @@ class Plugin(object):
         # fix: python 2.7 unicode file bug
         # http://stackoverflow.com/questions/9941064/subprocess-popen-with-a-unicode-path
         cmd = cmd.encode(locale.getpreferredencoding())
-        try:
-            progress = ProgressBar(self.calc_best_step())
-            lock = threading.RLock()
-            in_params = [cmd, self.is_new_shell]
-            out_params = [None, '']
-            t = threading.Thread(target=Plugin.run_thread, args=(in_params, lock, out_params))
-            t.start()
-            while t.is_alive():
-                t.join(timeout=1)
-                progress.perform_step()
-            with lock:
-                # not Success
-                if out_params[0] != 0:
-                    raise Exception(out_params[1])
-        except Exception as ex:
-            raise
+        in_params = [cmd, self.is_new_shell]
+        out_params = [None, '']
+        if isGIMP:
+            gimp.progress_init("Save guetzli ...")
+        lock = threading.RLock()
+        t = threading.Thread(target=Plugin.run_thread, args=(in_params, lock, out_params))
+        t.start()
+        while t.is_alive():
+            t.join(timeout=1)
+            self.progress.perform_step()
+        with lock:
+            # not Success
+            if out_params[0] != 0:
+                raise Exception(out_params[1])
     @staticmethod
     def run_thread(in_params, lock, out_params):
         """
@@ -212,21 +226,30 @@ class Plugin(object):
         supported = tuple(Plugin.JSON['COMMAND']['SUFFIX'])
         if not name.endswith(supported):
             raise Exception('UnSupported File Type\n{0}'.format(name))
+        if self.canvas.dirty:
+            raise Exception('Please save the image\n{0}'.format(name))
         self.input_file = '"{0}"'.format(name)
         self.output_file = '"{0}"'.format(Plugin.with_suffix(name, self.output_extension))
 
     @staticmethod
-    def main(ext, quality):
+    def main(image, drawable, ext, quality):
         """
         plugin entry point
+        :param image:Selected Image      GIMP menu<Image> required
+        :param drawable:drawable Image   GIMP menu<Image> required
         :param ext: output file extension
-        :param quality:
+        :param quality:output file quality
         :return:
         """
-        plugin = Plugin()
-        plugin.set_extension(ext)
-        plugin.set_quality(quality)
-        plugin.run()
+        try:
+            plugin = Plugin(Canvas(image))
+            plugin.set_extension(ext)
+            plugin.set_quality(quality)
+            plugin.run()
+        except Exception as ex:
+            raise
+            #if isGIMP:
+            #    gimp.message(ex.message)
 
 
 if isGIMP:
@@ -236,17 +259,21 @@ if isGIMP:
         help="",
         author="umyu",
         copyright="umyu",
-        date="2017/3/22",
+        date="2017/3/25",
         label="Save guetzli ...",
         imagetypes="*",
         params=[
+            (PF_IMAGE, "image", "Input image", None),
+            (PF_DRAWABLE, "drawable", "Input drawable", None),
             (PF_STRING, "extension", "File extension", '.jpeg'),
-            (PF_SLIDER, "quality", "quality", 95, (85, 100, 1)),
+            (PF_SLIDER, "quality", "quality", 95, (84, 100, 1)),
         ],
         results=[],
         function=Plugin.main,
-        menu="<Image>/File/Export/"
+        menu="<Image>/File/Export/",
+        domain=("gimp20-python", gimp.locale_directory)
     )
     main()
 else:
-    Plugin.main('.jpeg', 95)
+    if __name__ == '__main__':
+        Plugin.main(None, None, '.jpeg', 95)
