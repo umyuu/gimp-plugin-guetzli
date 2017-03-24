@@ -33,7 +33,6 @@ class ProgressBar(object):
         # </blockquote>
         self.minimum = Decimal(0)
         self.maximum = Decimal(1)
-
     @property
     def step(self):
         return self._step
@@ -64,7 +63,6 @@ class Canvas(object):
         :param image: is None Script Debugging
         """
         self.image = image
-
     @property
     def filename(self):
         if self.image is not None:
@@ -91,6 +89,7 @@ class Canvas(object):
         if self.image is not None:
             return self.image.dirty
         return False
+
 class Plugin(object):
     JSON = None
 
@@ -135,8 +134,7 @@ class Plugin(object):
                 with open(file_name, 'r') as infile:
                     Plugin.JSON = json.load(infile)
             except:
-                # file open error Wrapping
-                raise Exception('File Not Found\n{0}'.format(file_name))
+                raise
         return Plugin.JSON
 
     @staticmethod
@@ -168,11 +166,10 @@ class Plugin(object):
           <blockquote cite="https://github.com/google/guetzli">
           Guetzli uses a significant amount of CPU time. You should count on using about 1 minute of CPU per 1 MPix of input image.
           </blockquote>
-        :return: Per second
+        :return: ProgressBar#maximum / Per second
         """
         # 1 minute => Thread#join timeout elapsed
         seconds = Decimal(self.canvas.size) / Decimal(1000000) * Decimal(60)
-        # ProgressBar#maximum:1
         return self.progress.maximum / seconds
     def run(self):
         """
@@ -269,7 +266,7 @@ if isGIMP:
             (PF_IMAGE, "image", "Input image", None),
             (PF_DRAWABLE, "drawable", "Input drawable", None),
             (PF_STRING, "extension", "File extension", '.jpeg'),
-            (PF_SLIDER, "quality", "quality", 95, (85, 100, 1)),
+            (PF_SLIDER, "quality", "quality", 95, (84, 100, 1)),
         ],
         results=[],
         function=Plugin.main,
