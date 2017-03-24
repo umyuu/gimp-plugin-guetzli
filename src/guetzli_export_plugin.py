@@ -259,7 +259,7 @@ if isGIMP:
         help="",
         author="umyu",
         copyright="umyu",
-        date="2017/3/22",
+        date="2017/3/25",
         label="Save guetzli ...",
         imagetypes="*",
         params=[
