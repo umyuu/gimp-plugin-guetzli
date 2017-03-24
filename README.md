@@ -26,8 +26,5 @@ gimp-plugins Guetzli executable file call wrapper.
 
 4. Open .jpeg file
 
-## Plugin Specification
-When multiple files are opened, the file on the rightmost side is processed
-
 ## Uninstall
 Delete the file copied to GIMP plug-ins Directory.
