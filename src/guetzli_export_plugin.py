@@ -93,8 +93,6 @@ class Plugin(object):
         self.params = OrderedDict(node['PARAMS'])
         self.is_new_shell = node['NEW_SHELL'].upper() == 'TRUE'
         self.output_extension = '.jpeg'
-        self.input_file = None
-        self.output_file = None
     def search_command(self, node):
         """ search guetzli
         :param node:
@@ -145,9 +143,10 @@ class Plugin(object):
         for k in self.params.keys():
             args.append(k)
             args.append(str(self.params[k]))
-        self.set_filename()
-        args.append(self.input_file)
-        args.append(self.output_file)
+        input_file = '"{0}"'.format(self.canvas.filename)
+        output_file = '"{0}"'.format(Plugin.with_suffix(self.canvas.filename, self.output_extension))
+        args.append(input_file)
+        args.append(output_file)
         return args
     def calc_best_step(self):
         """
@@ -218,12 +217,6 @@ class Plugin(object):
             out_params[0] = return_code
             if exception is not None:
                 out_params[1] = exception
-    def set_filename(self):
-        """
-            set input, output file
-        """
-        self.input_file = '"{0}"'.format(self.canvas.filename)
-        self.output_file = '"{0}"'.format(Plugin.with_suffix(self.canvas.filename, self.output_extension))
     @staticmethod
     def main(image, drawable, ext, quality):
         """
