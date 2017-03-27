@@ -160,12 +160,23 @@ class Plugin(object):
         # 1 minute => Thread#join timeout elapsed
         seconds = Decimal(self.canvas.size) / Decimal(1000000) * Decimal(60)
         return self.progress.maximum / seconds
+    def validation(self):
+        name = self.canvas.filename
+        # New Image => filename:None
+        if self.canvas.dirty:
+            raise Exception('Please save the image\n{0}'.format(name))
+        # suffix check
+        supported = tuple(Plugin.JSON['COMMAND']['SUFFIX'])
+        if not name.endswith(supported):
+            raise Exception('UnSupported File Type\n{0}'.format(name))
+
     def run(self):
         """
         Thread#start & join
         GIMP GUI Update
         :return: None
         """
+        self.validation()
         cmd = self.get_args()
         if not isGIMP:
             print(' '.join(cmd))
@@ -211,16 +222,8 @@ class Plugin(object):
         """
             set input, output file
         """
-        name = self.canvas.filename
-        # suffix check
-        supported = tuple(Plugin.JSON['COMMAND']['SUFFIX'])
-        if not name.endswith(supported):
-            raise Exception('UnSupported File Type\n{0}'.format(name))
-        if self.canvas.dirty:
-            raise Exception('Please save the image\n{0}'.format(name))
-        self.input_file = '"{0}"'.format(name)
-        self.output_file = '"{0}"'.format(Plugin.with_suffix(name, self.output_extension))
-
+        self.input_file = '"{0}"'.format(self.canvas.filename)
+        self.output_file = '"{0}"'.format(Plugin.with_suffix(self.canvas.filename, self.output_extension))
     @staticmethod
     def main(image, drawable, ext, quality):
         """
