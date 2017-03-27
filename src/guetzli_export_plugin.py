@@ -58,38 +58,27 @@ class Canvas(object):
         Gimp Image Class / Script Debugging interface
         @pattern Adapter
     """
-    def __init__(self, image):
+    def __init__(self, image, filename=None, width=0, height=0, dirty=False):
         """
         :param image: is None Script Debugging
+        :param filename:
+        :param width:
+        :param height:
+        :param dirty: True…Unsaved, False…Saved
         """
-        self.image = image
-    @property
-    def filename(self):
-        if self.image is not None:
-            return self.image.filename
-        return '.\\test.png'
-    @property
-    def width(self):
-        if self.image is not None:
-            return self.image.width
-        return 800
-    @property
-    def height(self):
-        if self.image is not None:
-            return self.image.height
-        return 617
+        if image is not None:
+            self.filename = image.filename
+            self.width = image.width
+            self.height = image.height
+            self.dirty = image.dirty
+        else:
+            self.filename = filename
+            self.width = width
+            self.height = height
+            self.dirty = dirty
     @property
     def size(self):
         return self.width * self.height
-    @property
-    def dirty(self):
-        """
-        :return: Unsaved:True, Saved:False
-        """
-        if self.image is not None:
-            return self.image.dirty
-        return False
-
 class Plugin(object):
     JSON = None
 
@@ -188,6 +177,7 @@ class Plugin(object):
         out_params = [None, '']
         if isGIMP:
             gimp.progress_init("Save guetzli ...")
+            #gimp.message(in_params[0])
         lock = threading.RLock()
         t = threading.Thread(target=Plugin.run_thread, args=(in_params, lock, out_params))
         t.start()
@@ -208,15 +198,15 @@ class Plugin(object):
         """
         exception = None
         try:
-            return_code = subprocess.call(in_params[0], shell=in_params[1])
-        except Exception as ex:
-            return_code = 1
-            exception = ex
+            subprocess.check_output(in_params[0], shell=in_params[1], stderr=subprocess.STDOUT)
+            return_code = 0
+        except subprocess.CalledProcessError as ex:
+            return_code = ex.returncode
+            exception = ex.output
         with lock:
             out_params[0] = return_code
             if exception is not None:
                 out_params[1] = exception
-
     def set_filename(self):
         """
             set input, output file
@@ -276,4 +266,6 @@ if isGIMP:
     main()
 else:
     if __name__ == '__main__':
-        Plugin.main(None, None, '.jpeg', 95)
+        canvas = Canvas(None, '.\\test.png', 800, 617)
+        plugin = Plugin(canvas)
+        plugin.run()
