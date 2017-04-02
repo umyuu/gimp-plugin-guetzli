@@ -63,6 +63,7 @@ class Canvas(object):
         :param height:
         :param dirty: True…Unsaved, False…Saved
         """
+        assert image is not None or filename is not None
         if image is not None:
             self.filename = image.filename
             self.width = image.width
