@@ -262,6 +262,5 @@ if isGIMP:
     main()
 else:
     if __name__ == '__main__':
-        canvas = Canvas(None, '.\\test.png', 800, 617)
-        plugin = Plugin(canvas)
+        plugin = Plugin(Canvas(None, '.\\test.png', 800, 617))
         plugin.run()
