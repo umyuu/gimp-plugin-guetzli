@@ -79,6 +79,20 @@ class Canvas(object):
     @property
     def size(self):
         return self.width * self.height
+class Resources(object):
+    @staticmethod
+    def load():
+        """
+        load json file
+        :return:json data
+        """
+        # .py => .json
+        file_name = Plugin.with_suffix(__file__, '.json')
+        try:
+            with open(file_name, 'r') as infile:
+                return json.load(infile)
+        except:
+            raise
 class Plugin(object):
     JSON = None
 
@@ -87,7 +101,7 @@ class Plugin(object):
         self.progress = ProgressBar()
         self.progress.step = self.calc_best_step()
         self.base_dir = os.path.dirname(__file__)
-        Plugin.load_setting()
+        Plugin.JSON = Resources.load()
         node = Plugin.JSON['COMMAND']
         self.cmd = self.search_command(node['FILE'])
         self.params = OrderedDict(node['PARAMS'])
@@ -107,22 +121,6 @@ class Plugin(object):
             if os.path.getsize(exe_file) > lower_limit:
                 return exe_file
         raise Exception('File Not Found\n{0}\nPlease download {1}\n{2}'.format(self.base_dir, target[:-1], link))
-
-    @staticmethod
-    def load_setting():
-        """
-        load json
-        :return:json data
-        """
-        if Plugin.JSON is None:
-            # .py => .json
-            file_name = Plugin.with_suffix(__file__, '.json')
-            try:
-                with open(file_name, 'r') as infile:
-                    Plugin.JSON = json.load(infile)
-            except:
-                raise
-        return Plugin.JSON
 
     @staticmethod
     def with_suffix(file_name, suffix):
