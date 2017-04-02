@@ -245,7 +245,7 @@ if isGIMP:
         copyright="umyu",
         date="2017/3/25",
         label="Save guetzli ...",
-        imagetypes="*",
+        imagetypes="RGB",
         params=[
             (PF_IMAGE, "image", "Input image", None),
             (PF_DRAWABLE, "drawable", "Input drawable", None),
