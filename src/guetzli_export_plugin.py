@@ -45,10 +45,7 @@ class ProgressBar(object):
         :return: None
         """
         self.value += self.step
-        if isGIMP:
-            gimp.progress_update(self.value)
-        else:
-            print(self.value)
+
         if self.value >= self.maximum:
             self.value = self.minimum
 
@@ -192,6 +189,10 @@ class Plugin(object):
         while t.is_alive():
             t.join(timeout=1)
             self.progress.perform_step()
+            if isGIMP:
+                gimp.progress_update(self.progress.value)
+            else:
+                print(self.progress.value)
         with lock:
             # not Success
             if out_params[0] != 0:
