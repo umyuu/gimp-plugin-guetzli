@@ -85,7 +85,7 @@ class Resources(object):
         :return:json data
         """
         # .py => .json
-        file_name = Plugin.with_suffix(__file__, '.json')
+        file_name = with_suffix(__file__, '.json')
         try:
             with open(file_name, 'r') as infile:
                 return json.load(infile)
@@ -120,9 +120,6 @@ class Plugin(object):
                 return exe_file
         raise Exception('File Not Found\n{0}\nPlease download {1}\n{2}'.format(self.base_dir, target[:-1], link))
 
-    @staticmethod
-    def with_suffix(file_name, suffix):
-        return os.path.splitext(file_name)[0] + suffix
     def set_quality(self, quality):
         self.params['--quality'] = int(quality)
         return self
@@ -140,7 +137,7 @@ class Plugin(object):
             args.append(k)
             args.append(str(self.params[k]))
         input_file = '"{0}"'.format(self.canvas.filename)
-        output_file = '"{0}"'.format(Plugin.with_suffix(self.canvas.filename, self.output_extension))
+        output_file = '"{0}"'.format(with_suffix(self.canvas.filename, self.output_extension))
         args.append(input_file)
         args.append(output_file)
         return args
@@ -236,6 +233,10 @@ class Plugin(object):
             raise
             #if isGIMP:
             #    gimp.message(ex.message)
+
+
+def with_suffix(file_name, suffix):
+    return os.path.splitext(file_name)[0] + suffix
 
 
 if isGIMP:
